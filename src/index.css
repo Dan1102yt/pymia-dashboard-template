@@ -1,0 +1,81 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-primary: #2563EB;
+  --color-secondary: #64748B;
+  --color-bg: #F8FAFC;
+}
+
+@layer base {
+  body {
+    @apply font-sans antialiased;
+    background-color: var(--color-bg);
+    color: #1E293B;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply px-4 py-2 rounded-lg text-white text-sm font-medium transition-all duration-200 hover:opacity-90 active:scale-95;
+    background-color: var(--color-primary);
+  }
+
+  .btn-secondary {
+    @apply px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-slate-100 active:scale-95;
+    color: var(--color-secondary);
+    border: 1px solid #E2E8F0;
+    background-color: white;
+  }
+
+  .card {
+    @apply bg-white rounded-xl border border-slate-200 shadow-sm;
+  }
+
+  .sidebar-link {
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150;
+    color: #64748B;
+  }
+
+  .sidebar-link:hover {
+    @apply bg-slate-100;
+    color: #1E293B;
+  }
+
+  .sidebar-link.active {
+    color: var(--color-primary);
+    background-color: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  }
+
+  .stat-card {
+    @apply card p-5;
+  }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+
+/* Chat markdown */
+.prose-chat h1, .prose-chat h2, .prose-chat h3 { @apply font-semibold mt-3 mb-1; }
+.prose-chat h1 { @apply text-lg; }
+.prose-chat h2 { @apply text-base; }
+.prose-chat h3 { @apply text-sm; }
+.prose-chat p { @apply mb-2; }
+.prose-chat ul, .prose-chat ol { @apply mb-2 pl-4; }
+.prose-chat ul { @apply list-disc; }
+.prose-chat ol { @apply list-decimal; }
+.prose-chat li { @apply mb-0.5; }
+.prose-chat code { @apply bg-slate-100 px-1 py-0.5 rounded text-xs font-mono; }
+.prose-chat pre { @apply bg-slate-100 p-3 rounded-lg text-xs overflow-x-auto mb-2; }
+.prose-chat strong { @apply font-semibold; }
+.prose-chat table { @apply w-full border-collapse mb-2 text-sm; }
+.prose-chat th { @apply border border-slate-300 px-2 py-1 bg-slate-50 font-semibold; }
+.prose-chat td { @apply border border-slate-300 px-2 py-1; }
