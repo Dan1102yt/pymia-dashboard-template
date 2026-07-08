@@ -247,8 +247,8 @@ export function AsistenteModule() {
                 onKeyDown={handleKey}
                 placeholder="Pregunta sobre tus datos... (Enter para enviar)"
                 rows={1}
-                className="flex-1 resize-none text-sm outline-none placeholder-slate-400 bg-transparent max-h-28 leading-relaxed py-1"
-                style={{ minHeight: '36px' }}
+                className="flex-1 resize-none text-sm outline-none placeholder-slate-400 bg-transparent max-h-28 leading-relaxed py-2.5"
+                style={{ minHeight: '44px' }}
                 onInput={e => {
                   const t = e.currentTarget;
                   t.style.height = 'auto';
@@ -258,7 +258,7 @@ export function AsistenteModule() {
               <button
                 onClick={send}
                 disabled={!input.trim() || loading}
-                className="w-8 h-8 rounded-full flex items-center justify-center text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 active:scale-95 flex-shrink-0"
+                className="w-11 h-11 rounded-full flex items-center justify-center text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 active:scale-95 flex-shrink-0"
                 style={{ backgroundColor: 'var(--color-primary)' }}
               >
                 <Send size={14} />

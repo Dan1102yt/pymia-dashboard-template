@@ -1,22 +1,30 @@
 import { useState } from 'react';
-import { LayoutGrid, Table2, AlertTriangle } from 'lucide-react';
+import { LayoutGrid, Table2, AlertTriangle, Plus } from 'lucide-react';
 import { EntityCard } from './EntityCard';
 import { EntityTable } from './EntityTable';
 import { EntityDetail } from './EntityDetail';
+import { EntityFormModal, newEntityLabel, isFeminineNoun } from './EntityFormModal';
 import { getDaysUntil } from './entityUtils';
+import { Button } from '../ui/Button';
+import { Toast } from '../ui/Toast';
+import { useToast } from '../../hooks/useToast';
 import type { EntityMock, IndustriaConfig } from '../../types/config.types';
 
 interface EntityTrackerProps {
   config: IndustriaConfig;
+  entities: EntityMock[];
+  onCreateEntity: (entity: EntityMock) => void;
 }
 
-export function EntityTracker({ config }: EntityTrackerProps) {
+export function EntityTracker({ config, entities, onCreateEntity }: EntityTrackerProps) {
   const [view, setView] = useState<'cards' | 'table'>(config.defaultView ?? 'cards');
   const [selected, setSelected] = useState<EntityMock | null>(null);
   const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [showForm, setShowForm] = useState(false);
+  const toast = useToast();
 
   // Compute global alerts
-  const globalAlerts = config.entities.flatMap(entity =>
+  const globalAlerts = entities.flatMap(entity =>
     config.fields
       .filter(f => f.type === 'date' && f.alertDaysThreshold != null)
       .flatMap(f => {
@@ -31,8 +39,14 @@ export function EntityTracker({ config }: EntityTrackerProps) {
   );
 
   const filtered = filterStatus === 'all'
-    ? config.entities
-    : config.entities.filter(e => e.statusKey === filterStatus);
+    ? entities
+    : entities.filter(e => e.statusKey === filterStatus);
+
+  const handleCreate = (entity: EntityMock) => {
+    onCreateEntity(entity);
+    setShowForm(false);
+    toast.show(`${config.entityName} creado${isFeminineNoun(config.entityName) ? 'a' : ''} correctamente`);
+  };
 
   return (
     <div className="space-y-5">
@@ -55,24 +69,31 @@ export function EntityTracker({ config }: EntityTrackerProps) {
         </div>
       )}
 
+      {/* New entity button */}
+      <div className="flex justify-end">
+        <Button onClick={() => setShowForm(true)} size="sm" className="w-full sm:w-auto justify-center">
+          <Plus size={15} /> {newEntityLabel(config.entityName)}
+        </Button>
+      </div>
+
       {/* Controls */}
       <div className="flex items-center gap-3 flex-wrap">
         {/* Status filter */}
         <div className="flex items-center gap-1.5 flex-wrap flex-1">
           <button
             onClick={() => setFilterStatus('all')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${filterStatus === 'all' ? 'text-white' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+            className={`px-3 py-2.5 sm:py-1.5 rounded-lg text-xs font-medium transition-colors ${filterStatus === 'all' ? 'text-white' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}
             style={filterStatus === 'all' ? { backgroundColor: 'var(--color-primary)' } : {}}
           >
-            Todos ({config.entities.length})
+            Todos ({entities.length})
           </button>
           {config.statuses.map(s => {
-            const count = config.entities.filter(e => e.statusKey === s.key).length;
+            const count = entities.filter(e => e.statusKey === s.key).length;
             return (
               <button
                 key={s.key}
                 onClick={() => setFilterStatus(s.key)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${filterStatus === s.key ? 'text-white' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+                className={`px-3 py-2.5 sm:py-1.5 rounded-lg text-xs font-medium transition-colors ${filterStatus === s.key ? 'text-white' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}
                 style={filterStatus === s.key ? { backgroundColor: 'var(--color-primary)' } : {}}
               >
                 {s.label} ({count})
@@ -85,7 +106,7 @@ export function EntityTracker({ config }: EntityTrackerProps) {
         <div className="flex items-center bg-white border border-slate-200 rounded-lg p-0.5">
           <button
             onClick={() => setView('cards')}
-            className={`p-1.5 rounded-md transition-colors ${view === 'cards' ? 'text-white' : 'text-slate-500 hover:bg-slate-100'}`}
+            className={`min-w-[40px] min-h-[40px] flex items-center justify-center rounded-md transition-colors ${view === 'cards' ? 'text-white' : 'text-slate-500 hover:bg-slate-100'}`}
             style={view === 'cards' ? { backgroundColor: 'var(--color-primary)' } : {}}
             title="Vista tarjetas"
           >
@@ -93,7 +114,7 @@ export function EntityTracker({ config }: EntityTrackerProps) {
           </button>
           <button
             onClick={() => setView('table')}
-            className={`p-1.5 rounded-md transition-colors ${view === 'table' ? 'text-white' : 'text-slate-500 hover:bg-slate-100'}`}
+            className={`min-w-[40px] min-h-[40px] flex items-center justify-center rounded-md transition-colors ${view === 'table' ? 'text-white' : 'text-slate-500 hover:bg-slate-100'}`}
             style={view === 'table' ? { backgroundColor: 'var(--color-primary)' } : {}}
             title="Vista tabla"
           >
@@ -123,6 +144,12 @@ export function EntityTracker({ config }: EntityTrackerProps) {
       )}
 
       <EntityDetail entity={selected} config={config} onClose={() => setSelected(null)} />
+
+      {showForm && (
+        <EntityFormModal config={config} onClose={() => setShowForm(false)} onCreate={handleCreate} />
+      )}
+
+      <Toast message={toast.message} onDismiss={toast.dismiss} />
     </div>
   );
 }

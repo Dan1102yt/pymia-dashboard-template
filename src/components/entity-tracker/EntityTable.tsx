@@ -14,7 +14,7 @@ export function EntityTable({ entities, config, onRowClick }: EntityTableProps) 
 
   return (
     <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
-      <table className="w-full text-sm">
+      <table className="w-full min-w-[640px] text-sm">
         <thead>
           <tr className="border-b border-slate-200 bg-slate-50">
             <th className="text-left px-4 py-3 font-semibold text-slate-600 text-xs uppercase tracking-wide whitespace-nowrap">
@@ -47,7 +47,7 @@ export function EntityTable({ entities, config, onRowClick }: EntityTableProps) 
                 className="hover:bg-slate-50 cursor-pointer transition-colors"
                 onClick={() => onRowClick(entity)}
               >
-                <td className="px-4 py-3">
+                <td className="px-4 py-3 whitespace-nowrap">
                   <div className="flex items-center gap-2">
                     {hasAlert && <AlertTriangle size={14} className="text-amber-500 flex-shrink-0" />}
                     <span className="font-medium text-slate-900">{entity.name}</span>

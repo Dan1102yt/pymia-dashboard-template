@@ -145,7 +145,7 @@ Responde ÚNICAMENTE con el JSON, sin texto adicional.`,
             <img src={image} alt="Recibo" className="w-full max-h-48 object-contain bg-slate-50" />
             <button
               onClick={reset}
-              className="absolute top-2 right-2 p-1 bg-white/90 rounded-full shadow hover:bg-white transition-colors"
+              className="absolute top-2 right-2 min-w-[40px] min-h-[40px] flex items-center justify-center bg-white/90 rounded-full shadow hover:bg-white transition-colors"
             >
               <X size={14} />
             </button>

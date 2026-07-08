@@ -1,7 +1,9 @@
 import { useState } from 'react';
-import { Search, Phone, Mail, MapPin, MessageSquare, Clock, Users, Pencil, X, Check } from 'lucide-react';
+import { Search, Phone, Mail, MapPin, MessageSquare, Clock, Users, Pencil, X, Check, Plus } from 'lucide-react';
 import { Modal } from '../../components/ui/Modal';
 import { Button } from '../../components/ui/Button';
+import { Toast } from '../../components/ui/Toast';
+import { useToast } from '../../hooks/useToast';
 import { clientConfig } from '../../config/client.config';
 import type { ClienteMock, Interaccion } from '../../types/config.types';
 import { format, parseISO, isValid } from 'date-fns';
@@ -42,7 +44,7 @@ function EditField({
         value={value}
         onChange={e => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full text-sm text-slate-800 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 outline-none focus:border-slate-400 focus:bg-white transition-colors"
+        className="w-full text-sm text-slate-800 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 min-h-[44px] outline-none focus:border-slate-400 focus:bg-white transition-colors"
       />
     </div>
   );
@@ -188,12 +190,94 @@ function ClienteDetailModal({ cliente, onClose, onSave }: ClienteDetailModalProp
   );
 }
 
+// ─── New client form ──────────────────────────────────────────────────────────
+
+interface ClienteFormModalProps {
+  onClose: () => void;
+  onCreate: (cliente: ClienteMock) => void;
+}
+
+function ClienteFormModal({ onClose, onCreate }: ClienteFormModalProps) {
+  const [nombre, setNombre] = useState('');
+  const [empresa, setEmpresa] = useState('');
+  const [telefono, setTelefono] = useState('');
+  const [email, setEmail] = useState('');
+  const [ciudad, setCiudad] = useState('');
+  const [notas, setNotas] = useState('');
+  const [errors, setErrors] = useState<{ nombre?: string; telefono?: string; ciudad?: string }>({});
+
+  const handleSave = () => {
+    const nextErrors: typeof errors = {};
+    if (!nombre.trim()) nextErrors.nombre = 'El nombre es obligatorio';
+    if (!telefono.trim()) nextErrors.telefono = 'El teléfono es obligatorio';
+    if (!ciudad.trim()) nextErrors.ciudad = 'La ciudad es obligatoria';
+
+    if (Object.keys(nextErrors).length > 0) {
+      setErrors(nextErrors);
+      return;
+    }
+
+    onCreate({
+      id: `c-${Date.now()}`,
+      nombre: nombre.trim(),
+      empresa: empresa.trim() || undefined,
+      telefono: telefono.trim(),
+      email: email.trim(),
+      ciudad: ciudad.trim(),
+      totalCompras: 0,
+      interacciones: [],
+      notas: notas.trim() || undefined,
+    });
+  };
+
+  return (
+    <Modal open title="Nuevo cliente" onClose={onClose} size="md">
+      <div className="space-y-4">
+        <div>
+          <EditField label="Nombre completo" value={nombre} onChange={setNombre} placeholder="Nombre del contacto" />
+          {errors.nombre && <p className="text-xs text-red-600 mt-1">{errors.nombre}</p>}
+        </div>
+        <EditField label="Empresa" value={empresa} onChange={setEmpresa} placeholder="Nombre de la empresa (opcional)" />
+        <div>
+          <EditField label="Teléfono" value={telefono} onChange={setTelefono} type="tel" placeholder="3XXXXXXXXX" />
+          {errors.telefono && <p className="text-xs text-red-600 mt-1">{errors.telefono}</p>}
+        </div>
+        <EditField label="Correo electrónico" value={email} onChange={setEmail} type="email" placeholder="correo@ejemplo.com (opcional)" />
+        <div>
+          <EditField label="Ciudad" value={ciudad} onChange={setCiudad} placeholder="Ciudad" />
+          {errors.ciudad && <p className="text-xs text-red-600 mt-1">{errors.ciudad}</p>}
+        </div>
+        <div>
+          <label className="block text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1">Notas</label>
+          <textarea
+            value={notas}
+            onChange={e => setNotas(e.target.value)}
+            placeholder="Observaciones sobre el cliente... (opcional)"
+            rows={3}
+            className="w-full text-sm text-slate-800 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 outline-none focus:border-slate-400 focus:bg-white transition-colors resize-none"
+          />
+        </div>
+        <div className="flex gap-2 pt-1">
+          <Button onClick={handleSave} className="flex-1 justify-center">
+            <Check size={14} /> Guardar cliente
+          </Button>
+          <Button variant="secondary" onClick={onClose}>
+            <X size={14} /> Cancelar
+          </Button>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
 // ─── Main module ──────────────────────────────────────────────────────────────
 
 export function ClientesModule() {
   const [clientes, setClientes] = useState<ClienteMock[]>(() => [...clientConfig.mockData.clientes]);
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<ClienteMock | null>(null);
+  const [showForm, setShowForm] = useState(false);
+  const toast = useToast();
 
   const filtered = clientes.filter(c =>
     `${c.nombre} ${c.empresa ?? ''} ${c.ciudad}`.toLowerCase().includes(search.toLowerCase())
@@ -204,6 +288,12 @@ export function ClientesModule() {
     setSelected(updated); // keep modal open showing fresh data
   };
 
+  const handleCreate = (cliente: ClienteMock) => {
+    setClientes(prev => [cliente, ...prev]);
+    setShowForm(false);
+    toast.show('Cliente creado correctamente');
+  };
+
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between flex-wrap gap-3">
@@ -211,14 +301,19 @@ export function ClientesModule() {
           <h1 className="text-xl font-bold text-slate-900">Clientes / CRM</h1>
           <p className="text-sm text-slate-500">{clientes.length} clientes registrados</p>
         </div>
-        <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-3 py-2 w-full sm:w-64">
-          <Search size={15} className="text-slate-400 flex-shrink-0" />
-          <input
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="Buscar cliente..."
-            className="text-sm bg-transparent outline-none flex-1 placeholder-slate-400"
-          />
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-3 py-2 flex-1 min-w-0 sm:w-64 sm:flex-none">
+            <Search size={15} className="text-slate-400 flex-shrink-0" />
+            <input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Buscar cliente..."
+              className="text-sm bg-transparent outline-none flex-1 placeholder-slate-400"
+            />
+          </div>
+          <Button onClick={() => setShowForm(true)} size="sm" className="flex-shrink-0">
+            <Plus size={15} /> Nuevo cliente
+          </Button>
         </div>
       </div>
 
@@ -301,6 +396,10 @@ export function ClientesModule() {
           onSave={handleSave}
         />
       )}
+
+      {showForm && <ClienteFormModal onClose={() => setShowForm(false)} onCreate={handleCreate} />}
+
+      <Toast message={toast.message} onDismiss={toast.dismiss} />
     </div>
   );
 }
